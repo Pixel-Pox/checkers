@@ -1,7 +1,5 @@
-from email.policy import default
 import pygame
 import numpy as np
-from collections import defaultdict
 from checkers.piece import Piece
 from .constants import BLACK, DARK_BROWN, LIGHT_BROWN, ROWS, SQUARE_SIZE, COLS, WHITE
 
@@ -67,33 +65,39 @@ class Board:
 
     def get_valid_moves(self, piece, move_no=0):
         moves = []
+        diagonals = []
+        positions = [[[j, i] for i in range(ROWS)] for j in range(COLS)]
+        possible_skip = False
+        row = piece.row
+        col = piece.col
+
+        #Create all possible directions of movement for a piece, if king piece can move through whole board, if not only one move is permitted
         if piece.king:
-            pass
+            #first diagonal with offset of -(row - col)
+            diag1 = np.diagonal(positions, -(row - col)).T
+            #second diagonal with offset accounted for the flip
+            diag2 = np.flipud(positions).diagonal(-(ROWS - 1 - row - col)).T
+            diagonals = np.concatenate([diag1, diag2]).tolist()
         else:
-            forward_left = [piece.row + piece.direction, piece.col + piece.direction]
-            forward_right = [piece.row + piece.direction, piece.col - piece.direction]
-            back_left = [piece.row - piece.direction, piece.col + piece.direction]
-            back_right = [piece.row - piece.direction, piece.col - piece.direction]
-
-        if not self.is_outside_board(forward_left[0], forward_left[1]):
-            if self.get_piece(forward_left[0], forward_left[1]) == 0:
-                moves.append(forward_left)
-        if not self.is_outside_board(forward_right[0], forward_right[1]):
-            if self.get_piece(forward_right[0], forward_right[1]) == 0:
-                moves.append(forward_right)
-        if not self.is_outside_board(back_left[0], back_left[1]):
-            if self.get_piece(back_left[0], back_left[1]) == 0:
-                moves.append(back_left)
-        if not self.is_outside_board(back_right[0], back_right[1]):
-            if self.get_piece(back_right[0], back_right[1]) == 0:
-                moves.append(back_right)
-
+            diagonals = [
+                [row + piece.direction, col - piece.direction],
+                [row + piece.direction, col + piece.direction],
+                [row - piece.direction, col - piece.direction],
+                [row - piece.direction, col + piece.direction]
+            ]
         
+        #first check if there is possible skip over other pieces as it's required to skip in the rules if possible, and always have to take a path with MOST skips.
+        for coordinates in diagonals: 
+            if not self.is_outside_board(coordinates):
+                if coordinates != [row, col] and self.board[coordinates[0]][coordinates[1]] == 0:
+                    moves.append(coordinates)
+                    print(moves)
         return moves
 
+    
 
-
-    def is_outside_board(self, row, col):
+    def is_outside_board(self, coordinates):
+        row, col = coordinates
         if row < 0 or col < 0 or row >= ROWS or col >= COLS:
             return True
         return False 
