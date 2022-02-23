@@ -64,10 +64,9 @@ class Board:
                     piece.draw(window)
 
     def get_valid_moves(self, piece, move_no=0):
-        moves = []
+        moves = {}
         diagonals = []
         positions = [[[j, i] for i in range(ROWS)] for j in range(COLS)]
-        possible_skip = False
         row = piece.row
         col = piece.col
 
@@ -87,18 +86,39 @@ class Board:
             ]
         
         #first check if there is possible skip over other pieces as it's required to skip in the rules if possible, and always have to take a path with MOST skips.
-        for coordinates in diagonals: 
-            if not self.is_outside_board(coordinates):
-                if coordinates != [row, col] and self.board[coordinates[0]][coordinates[1]] == 0:
-                    moves.append(coordinates)
-                    print(moves)
+        for coordinates in diagonals:   
+            if coordinates != [row, col] and not self.is_outside_board(coordinates):  
+                row_dir, col_dir = self.get_direction(row, col, coordinates[0], coordinates[1])                            
+                if self.board[coordinates[0]][coordinates[1]] == 0:
+                    if piece.direction == row_dir:
+                        moves[str(coordinates)] = False
+                else:
+                    #if the possible position is occupied by another piece, check the position behind that piece on the same diagonal
+                    row_dir, col_dir = self.get_direction(row, col, coordinates[0], coordinates[1])
+                    skipped_row, skipped_col = row_dir*2+row, col_dir*2+col                    
+                    if not self.is_outside_board([skipped_row, skipped_col]):
+                        if self.board[skipped_row][skipped_col] == 0:
+                            moves[str([skipped_row, skipped_col])] = str([row + row_dir, col + col_dir])
+
         return moves
 
     
+    def get_direction(self, row, col, new_row, new_col):
+        row_dir = new_row - row
+        col_dir = new_col - col
+        return row_dir, col_dir
+
 
     def is_outside_board(self, coordinates):
         row, col = coordinates
         if row < 0 or col < 0 or row >= ROWS or col >= COLS:
             return True
         return False 
+        
+    def remove_piece(self, piece):
+        self.board[piece.row][piece.col] = 0
+        if piece.color == WHITE:
+            self.white_left -= 1
+        else:
+            self.black_left -= 1
         
