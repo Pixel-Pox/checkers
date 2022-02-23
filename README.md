@@ -1,4 +1,4 @@
-# checkers
+# International draughts
 Game can be started by just runinng "py main.py"
 
 Rules are created according to international (polish) rules of checkers.
