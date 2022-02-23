@@ -1,4 +1,3 @@
-from distutils.util import change_root
 import pygame
 from ast import literal_eval
 from checkers.board import Board
@@ -25,13 +24,17 @@ class Game:
         self._init()
 
     def select(self, row, col):
+        if self.board.skipped:
+            piece = self.board.skipped
+        else:
+            piece = self.board.get_piece(row, col)
+
         if self.selected:
             result = self._move(row, col)
             if not result:
                 self.selected = None
                 self.select(row, col)
 
-        piece = self.board.get_piece(row, col)
         if piece != 0 and piece.color == self.turn:
             self.selected = piece
             self.valid_moves = self.board.get_valid_moves(piece)
@@ -43,22 +46,22 @@ class Game:
         piece = self.board.get_piece(row, col)
         if self.selected and piece == 0 and str([row, col]) in self.valid_moves.keys():
             self.board.move(self.selected, row, col)
-
-            # if skipped player gets another turn with that piece
+            # if skipped remove piece
             if self.valid_moves[str([row, col])]:
                 skipped_piece = literal_eval(self.valid_moves[str([row, col])])
                 remove_piece = self.board.get_piece(
                     skipped_piece[0], skipped_piece[1])
                 self.board.remove_piece(remove_piece)
+
+                # if after skipping there is another skip available
                 piece = self.board.get_piece(row, col)
                 self.valid_moves = self.board.get_valid_moves(piece)
-                for value in self.valid_moves.values():
-                    if value != False:
-                        self.select(row, col)
-                        break
-                    else:
-                        self.change_turn()
-                
+                if any(value != False for value in self.valid_moves.values()) == True:
+                    self.board.skipped = piece
+                    self.select(row, col)
+                else:
+                    self.change_turn()
+
             else:
                 self.change_turn()
 
@@ -76,6 +79,7 @@ class Game:
 
     def change_turn(self):
         self.valid_moves = {}
+        self.board.skipped = False
         self.selected = None
         if self.turn == WHITE:
             self.turn = BLACK

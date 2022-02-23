@@ -6,6 +6,7 @@ from .constants import BLACK, DARK_BROWN, LIGHT_BROWN, ROWS, SQUARE_SIZE, COLS, 
 class Board:
     def __init__(self):
         self.board = []
+        self.skipped = False
 
         self.background = np.zeros((ROWS, COLS))
         self.background[1::2,::2] = 1
@@ -76,30 +77,36 @@ class Board:
             diag1 = np.diagonal(positions, -(row - col)).T
             #second diagonal with offset accounted for the flip
             diag2 = np.flipud(positions).diagonal(-(ROWS - 1 - row - col)).T
-            diagonals = np.concatenate([diag1, diag2]).tolist()
+            diagonals.append(diag1.tolist())
+            diagonals.append(diag2.tolist())
         else:
-            diagonals = [
+            diagonals = [[
                 [row + piece.direction, col - piece.direction],
                 [row + piece.direction, col + piece.direction],
                 [row - piece.direction, col - piece.direction],
                 [row - piece.direction, col + piece.direction]
-            ]
+            ]]
         
         #first check if there is possible skip over other pieces as it's required to skip in the rules if possible, and always have to take a path with MOST skips.
-        for coordinates in diagonals:   
-            if coordinates != [row, col] and not self.is_outside_board(coordinates):  
-                row_dir, col_dir = self.get_direction(row, col, coordinates[0], coordinates[1])                            
-                if self.board[coordinates[0]][coordinates[1]] == 0:
-                    if piece.direction == row_dir:
-                        moves[str(coordinates)] = False
-                else:
-                    #if the possible position is occupied by another piece, check the position behind that piece on the same diagonal
+        print(diagonals)
+        for diagonal in diagonals:
+            for coordinates in diagonal:   
+                if coordinates != [row, col] and not self.is_outside_board(coordinates):  
                     row_dir, col_dir = self.get_direction(row, col, coordinates[0], coordinates[1])
-                    skipped_row, skipped_col = row_dir*2+row, col_dir*2+col                    
-                    if not self.is_outside_board([skipped_row, skipped_col]):
-                        if self.board[skipped_row][skipped_col] == 0:
-                            moves[str([skipped_row, skipped_col])] = str([row + row_dir, col + col_dir])
-
+                    if self.board[coordinates[0]][coordinates[1]] == 0:
+                        if piece.king:
+                            moves[str(coordinates)] = False
+                        elif piece.direction == row_dir:
+                            moves[str(coordinates)] = False
+                    else:
+                        #if the possible position is occupied by another piece that's opposite colour, check the position behind that piece on the same diagonal
+                        if self.board[coordinates[0]][coordinates[1]].color != piece.color:                        
+                            skipped_row, skipped_col = row_dir+row, col_dir+col
+                            skipped_to_row, skipped_to_col = row_dir*2+row, col_dir*2+col                    
+                            if not self.is_outside_board([skipped_to_row, skipped_to_col]) and self.board[skipped_to_row][skipped_to_col] == 0:
+                                moves[str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col])
+                            
+        print(moves)
         return moves
 
     
