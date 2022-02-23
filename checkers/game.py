@@ -1,7 +1,7 @@
 import pygame
 from ast import literal_eval
 from checkers.board import Board
-from checkers.constants import WHITE, BLACK, BLUE, SQUARE_SIZE
+from checkers.constants import WHITE, BLACK, BLUE, SQUARE_SIZE, ROWS
 
 
 class Game:
@@ -46,7 +46,8 @@ class Game:
         piece = self.board.get_piece(row, col)
         if self.selected and piece == 0 and str([row, col]) in self.valid_moves.keys():
             self.board.move(self.selected, row, col)
-            # if skipped remove piece
+
+            # if skipped, remove skipped piece
             if self.valid_moves[str([row, col])]:
                 skipped_piece = literal_eval(self.valid_moves[str([row, col])])
                 remove_piece = self.board.get_piece(
@@ -60,9 +61,13 @@ class Game:
                     self.board.skipped = piece
                     self.select(row, col)
                 else:
+                    if row == 0 or row == ROWS-1:
+                        self.board.make_king(self.selected, row)
                     self.change_turn()
 
             else:
+                if row == 0 or row == ROWS-1:
+                    self.board.make_king(self.selected, row)
                 self.change_turn()
 
         else:
