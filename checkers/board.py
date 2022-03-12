@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from checkers.piece import Piece
+from .piece import Piece
 from .constants import BLACK, DARK_BROWN, LIGHT_BROWN, ROWS, SQUARE_SIZE, COLS, WHITE
 
 
@@ -31,6 +31,18 @@ class Board:
                 else:
                     pygame.draw.rect(
                         window, LIGHT_BROWN, (row*SQUARE_SIZE, col*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+    def evaluate(self):
+        return self.white_left - self.black_left + (1.5*self.white_kings - 1.5*self.black_kings)
+
+    def get_all_pieces(self, color):
+        pieces = []
+        for row in self.board:
+            for piece in row:
+                if piece != 0 and piece.color == color:
+                    pieces.append(piece)
+        return pieces
+
 
     def move(self, piece, new_row, new_col):
         # swap position of a piece with empty space, returns True if King has been made to end turn

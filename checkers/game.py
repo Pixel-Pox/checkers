@@ -3,6 +3,7 @@ import pygame
 from ast import literal_eval
 from checkers.board import Board
 from checkers.constants import WHITE, BLACK, BLUE, SQUARE_SIZE, ROWS
+from copy import deepcopy
 
 
 class Game:
@@ -99,13 +100,14 @@ class Game:
                     #if a piece gets to opposite end, make it a king and change turn
                     if row == 0 or row == ROWS-1:
                         self.board.make_king(self.selected, row)
-                    self.change_turn()
+                        self.change_turn()
+
             #if a piece gets to opposite end, make it a king and change turn
             else:
                 if row == 0 or row == ROWS-1:
                     self.board.make_king(self.selected, row)
-                self.change_turn()
-
+                    self.change_turn()
+            self.change_turn()
         else:
             return False
 
@@ -124,9 +126,20 @@ class Game:
         if self.is_won():
             self.winner = self.turn
             print(f"AND THE WINNER IS {self.winner}")
+            print(f"Do you want to play another round? y/n\n")
+            if input() == 'y':
+                self.reset()
+            elif input() == 'n':
+                pygame.quit()
+
         elif self.is_tie():
             self.winner = None
-            print(f"GAME HAS ENDED IN A DRAW DUE TO, TOO MANY NON SKIP TYPE MOVES")
+            print(f"GAME HAS ENDED IN A DRAW DUE TO TOO MANY NON SKIP TYPE MOVES")
+            print(f"Do you want to play another round? y/n\n")
+            if input() == 'y':
+                self.reset()
+            elif input() == 'n':
+                pygame.quit()
         else:
             self.valid_moves = {}
             self.board.skipped = False
@@ -135,3 +148,10 @@ class Game:
                 self.turn = BLACK
             else:
                 self.turn = WHITE
+    
+    def get_board(self):
+        return self.board
+
+    def ai_move(self, board):
+        self.board = board
+        self.change_turn()
