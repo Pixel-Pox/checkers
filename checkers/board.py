@@ -180,7 +180,7 @@ class Board:
                         skipped_to_row, skipped_to_col = coordinates[0], coordinates[1]
                         if not self.is_outside_board([skipped_to_row, skipped_to_col]):
                             moves[str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col]) 
-                            break 
+                            
 
                     # if no piece's on the diagonal have been skipped
                     # and the color of the piece at current coordinate is different then player's color
@@ -199,10 +199,10 @@ class Board:
                     elif self.board[coordinates[0]][coordinates[1]].color == piece.color:
                             break                        
         
-        if any(value != False for value in moves.values()):
-            skip_only_moves = {k: v for k, v in moves.items() if v != False}
-            print(skip_only_moves)
-            return skip_only_moves             
+        # if any(value != False for value in moves.values()):
+        #     skip_only_moves = {k: v for k, v in moves.items() if v != False}
+        #     print(skip_only_moves)
+        #     return skip_only_moves             
         
         return moves
 

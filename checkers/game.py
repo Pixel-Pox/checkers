@@ -1,9 +1,7 @@
-from types import NoneType
 import pygame
 from ast import literal_eval
 from checkers.board import Board
 from checkers.constants import WHITE, BLACK, BLUE, SQUARE_SIZE, ROWS
-from copy import deepcopy
 
 
 class Game:
@@ -108,8 +106,6 @@ class Game:
                     self.board.make_king(self.selected, row)
                     self.change_turn()
             
-        else:
-            return False
         self.change_turn()
         return True
 
