@@ -33,7 +33,7 @@ class Board:
                         window, LIGHT_BROWN, (row*SQUARE_SIZE, col*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
     def evaluate(self):
-        return self.white_left - self.black_left + (1.5*self.white_kings - 1.5*self.black_kings)
+        return self.white_left - self.black_left + (2*self.white_kings - 2*self.black_kings)
 
     def get_all_pieces(self, color):
         pieces = []
@@ -105,7 +105,7 @@ class Board:
         # If a piece has been skipped then the value takes the form of a skipped piece coordinate
         moves = {}
         diagonals = []
-        # create an array of coordinates from 0,0 to to ROWS-1, COLS-1
+        # create an array of coordinates from 0,0 to ROWS-1, COLS-1
         positions = [[[j, i] for i in range(ROWS)] for j in range(COLS)]
         row = piece.row
         col = piece.col
@@ -158,7 +158,7 @@ class Board:
                 ]
 
         # first check if there is possible skip over other pieces as it's required to skip
-        # in the rules if possible, and always have to take a path with MOST skips (not implemented MOST skips yet).
+        # in the rules if possible.
         for diagonal in diagonals:
             # we check if a piece was skipped on each diagonal separately
             skipped = False
@@ -179,7 +179,8 @@ class Board:
                     elif self.board[coordinates[0]][coordinates[1]] == 0 and skipped:
                         skipped_to_row, skipped_to_col = coordinates[0], coordinates[1]
                         if not self.is_outside_board([skipped_to_row, skipped_to_col]):
-                            moves[str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col])  
+                            moves[str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col]) 
+                            break 
 
                     # if no piece's on the diagonal have been skipped
                     # and the color of the piece at current coordinate is different then player's color
@@ -197,7 +198,12 @@ class Board:
                     # can't skip past own color, so we can break out of the whole diagonal and move to another diagonal               
                     elif self.board[coordinates[0]][coordinates[1]].color == piece.color:
                             break                        
-                        
+        
+        if any(value != False for value in moves.values()):
+            skip_only_moves = {k: v for k, v in moves.items() if v != False}
+            print(skip_only_moves)
+            return skip_only_moves             
+        
         return moves
 
     def get_direction(self, row, col, new_row, new_col):

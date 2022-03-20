@@ -22,15 +22,14 @@ def main():
     while run: 
         clock.tick(FPS)
 
-        if not game.is_won() or not game.is_tie():
-            if game.turn == BLACK:
-                _, new_board = minimax(game, 3, False, float('-inf'), float('inf'))
-                game.ai_move(new_board)
+        # if not game.is_won() or not game.is_tie():
+            # if game.turn == BLACK:
+            #     _, new_board = minimax(game, 5, False, float('-inf'), float('inf'))
+            #     game.ai_move(new_board)
 
-            else:
-                pass
-                _, new_board = minimax(game, 3, True, float('-inf'), float('inf'))
-                game.ai_move(new_board)
+            # else:          
+            #     _, new_board = minimax(game, 5, True, float('-inf'), float('inf'))
+            #     game.ai_move(new_board)
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

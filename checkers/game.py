@@ -107,10 +107,10 @@ class Game:
                 if row == 0 or row == ROWS-1:
                     self.board.make_king(self.selected, row)
                     self.change_turn()
-            self.change_turn()
+            
         else:
             return False
-
+        self.change_turn()
         return True
 
     def draw_valid_moves(self, moves):
