@@ -1,9 +1,7 @@
 import pygame
 from checkers.constants import SQUARE_SIZE, WIDTH, HEIGHT, WHITE, BLACK
-from checkers.board import Board
 from checkers.game import Game
 from minimax.algorithm import minimax
-import time
 
 FPS = 60
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -22,14 +20,14 @@ def main():
     while run: 
         clock.tick(FPS)
 
-        if not game.is_won() or not game.is_tie():
-            if game.turn == BLACK:
-                _, new_board = minimax(game, 3, False, float('-inf'), float('inf'))
-                game.ai_move(new_board)
+        # if not game.is_won() or not game.is_tie():
+        #     if game.turn == BLACK:
+        #         _, new_board = minimax(game, 3, False, float('-inf'), float('inf'))
+        #         game.ai_move(new_board)
 
-            else:          
-                _, new_board = minimax(game, 3, True, float('-inf'), float('inf'))
-                game.ai_move(new_board)
+        #     else:          
+        #         _, new_board = minimax(game, 3, True, float('-inf'), float('inf'))
+        #         game.ai_move(new_board)
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

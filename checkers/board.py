@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 from .piece import Piece
 from .constants import BLACK, DARK_BROWN, LIGHT_BROWN, ROWS, SQUARE_SIZE, COLS, WHITE
+from collections import defaultdict
 
 
 class Board:
@@ -100,111 +101,122 @@ class Board:
                 if piece != 0:
                     piece.draw(window)
 
-    def get_valid_moves(self, piece):
+    def get_valid_moves(self, color):
         # moves is a dictionary of possible moves as keys and value informing if a piece was skipped.
         # If a piece has been skipped then the value takes the form of a skipped piece coordinate
-        moves = {}
+        moves = defaultdict(dict)
+        skip_only_moves = defaultdict(dict)
         diagonals = []
         # create an array of coordinates from 0,0 to ROWS-1, COLS-1
         positions = [[[j, i] for i in range(ROWS)] for j in range(COLS)]
-        row = piece.row
-        col = piece.col
 
-        # Create all possible directions of movement for a piece, if king piece can move through whole board
-        if piece.king:
-            # first diagonal with offset of -(row - col)
-            diag1 = (np.diagonal(positions, -(row - col)).T).tolist()
 
-            # second diagonal with offset accounted for the flip
-            diag2 = (
-                np.flipud(positions).diagonal(-(ROWS - 1 - row - col)).T).tolist()
+        all_pieces = self.get_all_pieces(color)
 
-            # find the index of position of current piece in the diagonal array
-            piece_idx_1 = diag1.index([row, col])
-            piece_idx_2 = diag2.index([row, col])
+        for piece in all_pieces:
+            row = piece.row
+            col = piece.col
+            moves[piece] = {}
+            # Create all possible directions of movement for a piece, if king piece can move through whole board
+            if piece.king:
+                # first diagonal with offset of -(row - col)
+                diag1 = (np.diagonal(positions, -(row - col)).T).tolist()
 
-            # split two diagonals into 4 lists representing 4 directions that go in order from the piece's position
-            # e. g. piece on 2,2 can move forward left to 1,1 or 0,0, back left 3,1 or 4,0
-            # forward right 1,3 -> 0, 4 or back right which on a 10x10 board would be (in order, which is important)
-            # 3,3 -> 4,4 -> 5,5 -> 6,6 -> 7,7 -> 8,8 -> 9,9
-            forward_left = list(reversed(diag1[:piece_idx_1]))
-            back_left = list(reversed(diag2[:piece_idx_2]))
+                # second diagonal with offset accounted for the flip
+                diag2 = (
+                    np.flipud(positions).diagonal(-(ROWS - 1 - row - col)).T).tolist()
 
-            # we ignore the current piece's position, so we use the try and except in case the piece is on the edge of the board. 
-            # this will be changed to check if piece is on the border, then piece_idx +1 else, empty array
-            try:
-                forward_right = diag2[piece_idx_2+1:]
-            except IndexError:
-                forward_right = None
+                # find the index of position of current piece in the diagonal array
+                piece_idx_1 = diag1.index([row, col])
+                piece_idx_2 = diag2.index([row, col])
 
-            try:
-                back_right = diag1[piece_idx_1+1:]
-            except IndexError:
-                forward_right = None
+                # split two diagonals into 4 lists representing 4 directions that go in order from the piece's position
+                # e. g. piece on 2,2 can move forward left to 1,1 or 0,0, back left 3,1 or 4,0
+                # forward right 1,3 -> 0, 4 or back right which on a 10x10 board would be (in order, which is important)
+                # 3,3 -> 4,4 -> 5,5 -> 6,6 -> 7,7 -> 8,8 -> 9,9
+                forward_left = list(reversed(diag1[:piece_idx_1]))
+                back_left = list(reversed(diag2[:piece_idx_2]))
 
-            # create an 3-deep array of directions, their coordinates, and row, col if direction was created - ergo not an edge piece
-            directions = [forward_left, back_left, forward_right, back_right]
-            for direction in directions:
-                if direction != None:
-                    diagonals.append(direction)
-        # if not a king piece, only possible directions of movement are the corner spaces on the board. 
-        # piece's directions recognzies if a piece is white or black
-        else:
-            diagonals = [
-                [[row + piece.direction, col - piece.direction]],
-                [[row + piece.direction, col + piece.direction]],
-                [[row - piece.direction, col - piece.direction]],
-                [[row - piece.direction, col + piece.direction]]
-                ]
+                # we ignore the current piece's position, so we use the try and except in case the piece is on the edge of the board. 
+                # this will be changed to check if piece is on the border, then piece_idx +1 else, empty array
+                try:
+                    forward_right = diag2[piece_idx_2+1:]
+                except IndexError:
+                    forward_right = None
 
-        # first check if there is possible skip over other pieces as it's required to skip
-        # in the rules if possible.
-        for diagonal in diagonals:
-            # we check if a piece was skipped on each diagonal separately
-            skipped = False
-            for coordinates in diagonal:                
-                if not self.is_outside_board(coordinates):
-                    # row and columns directions (-1, +1 for a row and col)
-                    row_dir, col_dir = self.get_direction(row, col, coordinates[0], coordinates[1])
+                try:
+                    back_right = diag1[piece_idx_1+1:]
+                except IndexError:
+                    forward_right = None
 
-                    # if space on board is empty and piece hasn't been skipped yet and current coordinate as a viable move
-                    if self.board[coordinates[0]][coordinates[1]] == 0 and not skipped:
-                        if piece.king:
-                            moves[str(coordinates)] = False
-                        elif piece.direction == row_dir:
-                            moves[str(coordinates)] = False
+                # create an 3-deep array of directions, their coordinates, and row, col if direction was created - ergo not an edge piece
+                directions = [forward_left, back_left, forward_right, back_right]
+                for direction in directions:
+                    if direction != None:
+                        diagonals.append(direction)
+            # if not a king piece, only possible directions of movement are the corner spaces on the board. 
+            # piece's directions recognzies if a piece is white or black
+            else:
+                diagonals = [
+                    [[row + piece.direction, col - piece.direction]],
+                    [[row + piece.direction, col + piece.direction]],
+                    [[row - piece.direction, col - piece.direction]],
+                    [[row - piece.direction, col + piece.direction]]
+                    ]
 
-                    # if space on board is empty but a piece has been skipped, then add current coordinate as viable move
-                    # and add previous coordinate as a skipped piece's coordinate
-                    elif self.board[coordinates[0]][coordinates[1]] == 0 and skipped:
-                        skipped_to_row, skipped_to_col = coordinates[0], coordinates[1]
-                        if not self.is_outside_board([skipped_to_row, skipped_to_col]):
-                            moves[str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col]) 
-                            
+            # first check if there is possible skip over other pieces as it's required to skip
+            # in the rules if possible.
+            for diagonal in diagonals:
+                # we check if a piece was skipped on each diagonal separately
+                skipped = False
+                for coordinates in diagonal:                
+                    if not self.is_outside_board(coordinates):
+                        # row and columns directions (-1, +1 for a row and col)
+                        row_dir, col_dir = self.get_direction(row, col, coordinates[0], coordinates[1])
 
-                    # if no piece's on the diagonal have been skipped
-                    # and the color of the piece at current coordinate is different then player's color
-                    # mark this move as a skip for next move in the diagonal if a piece is king. 
-                    # else just mark the move as viable with the skip information for non king piece.
-                    elif not skipped and self.board[coordinates[0]][coordinates[1]].color != piece.color:
-                            skipped_row, skipped_col = row_dir+row, col_dir+col 
+                        # if space on board is empty and piece hasn't been skipped yet and current coordinate as a viable move
+                        if self.board[coordinates[0]][coordinates[1]] == 0 and not skipped:
                             if piece.king:
-                                skipped = True                              
-                            else:
-                                skipped_to_row, skipped_to_col = row_dir*2+row, col_dir*2+col
-                                if not self.is_outside_board([skipped_to_row, skipped_to_col]) and self.board[skipped_to_row][skipped_to_col] == 0:
-                                    moves[str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col])
-                    
-                    # can't skip past own color, so we can break out of the whole diagonal and move to another diagonal               
-                    elif self.board[coordinates[0]][coordinates[1]].color == piece.color:
-                            break                        
+                                moves[piece][str(coordinates)] = False
+                            elif piece.direction == row_dir:
+                                moves[piece][str(coordinates)] = False
+
+                        # if space on board is empty but a piece has been skipped, then add current coordinate as viable move
+                        # and add previous coordinate as a skipped piece's coordinate
+                        elif self.board[coordinates[0]][coordinates[1]] == 0 and skipped:
+                            skipped_to_row, skipped_to_col = coordinates[0], coordinates[1]
+                            if not self.is_outside_board([skipped_to_row, skipped_to_col]):
+                                moves[piece][str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col]) 
+                                
+
+                        # if no piece's on the diagonal have been skipped
+                        # and the color of the piece at current coordinate is different then player's color
+                        # mark this move as a skip for next move in the diagonal if a piece is king. 
+                        # else just mark the move as viable with the skip information for non king piece.
+                        elif not skipped and self.board[coordinates[0]][coordinates[1]].color != piece.color:
+                                skipped_row, skipped_col = row_dir+row, col_dir+col 
+                                if piece.king:
+                                    skipped = True                              
+                                else:
+                                    skipped_to_row, skipped_to_col = row_dir*2+row, col_dir*2+col
+                                    if not self.is_outside_board([skipped_to_row, skipped_to_col]) and self.board[skipped_to_row][skipped_to_col] == 0:
+                                        moves[piece][str([skipped_to_row, skipped_to_col])] = str([skipped_row, skipped_col])
+                        
+                        # can't skip past own color, so we can break out of the whole diagonal and move to another diagonal               
+                        elif self.board[coordinates[0]][coordinates[1]].color == piece.color:
+                                break                        
         
-        # if any(value != False for value in moves.values()):
-        #     skip_only_moves = {k: v for k, v in moves.items() if v != False}
-        #     print(skip_only_moves)
-        #     return skip_only_moves             
-        
-        return moves
+        for piece in moves:
+            skip_only_moves[piece] = {k: v for k, v in moves[piece].items() if v != False}
+            #if any(value != False for value in moves[piece].values()):
+            #    skip_only_moves[piece] = {k: v for k, v in moves[piece].items() if v != False}
+               
+                     
+        for piece in skip_only_moves:
+            if skip_only_moves[piece]:
+                return skip_only_moves, True
+
+        return moves, False
 
     def get_direction(self, row, col, new_row, new_col):
         #calulates the direction of movement on the board for non king piece
