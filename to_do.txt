@@ -1,9 +1,4 @@
-- add win condition
-- add tie condition
-- add a rule to valid moves: you always have to make the move with most skips
-- recheck the rules for movement of a king piece, after a skip
 - add an initial pygame menu with settings for board size, window size, and in the future potential AI choice for one or both players
 - add a live side-bar with information on current amount of pieces, kings, and who's turn it is
 - add a minimax algorithm to play as one of the players (with alpha-beta pruning)
 - add a perfect AI (checkers are solved)
-- add 
