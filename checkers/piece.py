@@ -1,5 +1,5 @@
 import pygame
-from .constants import WHITE, BLACK, SQUARE_SIZE, RED, GOLD
+from .constants import WHITE, BLACK, SQUARE_SIZE, RED, GOLD, ROWS
 
 class Piece:
     PADDING = 10
@@ -10,10 +10,13 @@ class Piece:
         self.col = col
         self.color = color
         self.king = False
+        
         if self.color == WHITE:
             self.direction = -1
+            self.dist_to_king = self.row
         else:
             self.direction = 1
+            self.dist_to_king = ROWS - self.row - 1
 
         self.x = 0
         self.y = 0
@@ -22,6 +25,10 @@ class Piece:
     def calculate_position(self):
         self.x = SQUARE_SIZE * self.col + SQUARE_SIZE //2
         self.y = SQUARE_SIZE * self.row + SQUARE_SIZE //2
+        if self.color == WHITE:
+            self.dist_to_king = self.row
+        else:
+            self.dist_to_king = ROWS - self.row - 1
 
     def make_king(self):
         self.king = True

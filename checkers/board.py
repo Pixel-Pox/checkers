@@ -1,8 +1,10 @@
+from turtle import position
 import pygame
 import numpy as np
 from .piece import Piece
 from .constants import BLACK, DARK_BROWN, LIGHT_BROWN, ROWS, SQUARE_SIZE, COLS, WHITE
 from collections import defaultdict
+from random import choice, random
 
 
 class Board:
@@ -33,10 +35,60 @@ class Board:
                     pygame.draw.rect(
                         window, LIGHT_BROWN, (row*SQUARE_SIZE, col*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
-    def evaluate(self):
-        return self.white_left - self.black_left + (2*self.white_kings - 2*self.black_kings)
+    def is_tie(self):
+        if self.king_moves == 30:
+            return True
+        return False
 
-    def get_all_pieces(self, color):
+    def is_won(self, current_player):              
+        #checking next player
+        next_player = None        
+        if current_player == WHITE:
+            next_player = BLACK
+        else:
+            next_player = WHITE
+        #if there are no more pieces on the board for next player, current player wins
+        if next_player == WHITE and self.white_left == 0:
+            return True
+        elif next_player == BLACK and self.black_left == 0:
+            return True
+
+        #if there are no moves available for the next player, current player wins
+        for idx_row, _ in enumerate(self.board):
+            for idx_col, _ in enumerate(self.board[idx_row]):
+                piece = self.board[idx_row][idx_col]
+                if piece != 0 and piece.color == next_player and self.get_valid_moves(current_player)[0]:
+                    return False
+        
+        return True
+    
+    def evaluate(self):
+        if self.is_won(BLACK):
+            return float('-inf')
+        elif self.is_won(WHITE):
+            return float('inf')
+        elif self.is_tie():
+            return 0
+
+        random_eval = choice([-0.1, 0.1])
+        sum_king_dist_white = 0 
+        sum_king_dist_black = 0
+
+        whites = self.get_all_side_pieces(WHITE)
+        blacks = self.get_all_side_pieces(BLACK)
+
+        for piece in whites: 
+            sum_king_dist_white += piece.dist_to_king
+        for piece in blacks: 
+            sum_king_dist_black += piece.dist_to_king
+        
+        average_king_dist_white = 2*(len(whites)*ROWS - (sum_king_dist_white / len(whites)))
+        average_king_dist_black = (-2)*(len(whites)*ROWS - (sum_king_dist_black / len(blacks)))
+
+        total_pieces = 3*self.white_left - 3*self.black_left + (5*self.white_kings - 5*self.black_kings)
+        return 5*total_pieces + 2*(average_king_dist_black) + 2*average_king_dist_white + random_eval
+
+    def get_all_side_pieces(self, color):
         pieces = []
         for row in self.board:
             for piece in row:
@@ -108,23 +160,24 @@ class Board:
         skip_only_moves = defaultdict(dict)
         diagonals = []
         # create an array of coordinates from 0,0 to ROWS-1, COLS-1
-        positions = [[[j, i] for i in range(ROWS)] for j in range(COLS)]
-
-
-        all_pieces = self.get_all_pieces(color)
+        positions = [[(j, i) for i in range(ROWS)] for j in range(COLS)]
+        flipped_positions = np.fliplr(positions)
+        flipped_board = np.fliplr(self.board)
+        all_pieces = self.get_all_side_pieces(color)
 
         for piece in all_pieces:
+            diagonals = []
+            flipped_piece_col = int(np.where(flipped_board == piece)[1])
             row = piece.row
             col = piece.col
             moves[piece] = {}
             # Create all possible directions of movement for a piece, if king piece can move through whole board
             if piece.king:
                 # first diagonal with offset of -(row - col)
-                diag1 = (np.diagonal(positions, -(row - col)).T).tolist()
+                diag1 = (np.diagonal(positions, col - row).T).tolist()
 
                 # second diagonal with offset accounted for the flip
-                diag2 = (
-                    np.flipud(positions).diagonal(-(ROWS - 1 - row - col)).T).tolist()
+                diag2 = np.fliplr((flipped_positions.diagonal(flipped_piece_col - row).T)).tolist()
 
                 # find the index of position of current piece in the diagonal array
                 piece_idx_1 = diag1.index([row, col])
@@ -181,6 +234,11 @@ class Board:
                             elif piece.direction == row_dir:
                                 moves[piece][str(coordinates)] = False
 
+
+                        elif self.board[coordinates[0]][coordinates[1]] != 0 and skipped:
+                            break
+
+
                         # if space on board is empty but a piece has been skipped, then add current coordinate as viable move
                         # and add previous coordinate as a skipped piece's coordinate
                         elif self.board[coordinates[0]][coordinates[1]] == 0 and skipped:
@@ -204,17 +262,20 @@ class Board:
                         
                         # can't skip past own color, so we can break out of the whole diagonal and move to another diagonal               
                         elif self.board[coordinates[0]][coordinates[1]].color == piece.color:
-                                break                        
+                                break         
+                        else:
+                            break               
         
         for piece in moves:
             skip_only_moves[piece] = {k: v for k, v in moves[piece].items() if v != False}
             #if any(value != False for value in moves[piece].values()):
             #    skip_only_moves[piece] = {k: v for k, v in moves[piece].items() if v != False}
                
-                     
-        for piece in skip_only_moves:
-            if skip_only_moves[piece]:
-                return skip_only_moves, True
+        skip_only_moves = {k: v for k, v in skip_only_moves.items() if v}    
+        if len(skip_only_moves) > 1:
+            return skip_only_moves, True
+        elif len(skip_only_moves) == 1:
+            return skip_only_moves, True
 
         return moves, False
 

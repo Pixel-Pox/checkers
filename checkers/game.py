@@ -25,35 +25,6 @@ class Game:
     def reset(self):
         self._init()
 
-    def is_won(self):              
-        #checking next player
-        next_player = None        
-        if self.turn == WHITE:
-            next_player = BLACK
-        else:
-            next_player = WHITE
-        #if there are no more pieces on the board for next player, current player wins
-        if next_player == WHITE and self.board.white_left == 0:
-            return True
-        elif next_player == BLACK and self.board.black_left == 0:
-            return True
-
-        #if there are no moves available for the next player, current player wins
-        for idx_row, _ in enumerate(self.board.board):
-            for idx_col, _ in enumerate(self.board.board[idx_row]):
-                piece = self.board.board[idx_row][idx_col]
-                if piece != 0 and piece.color == next_player and self.board.get_valid_moves(self.turn)[0]:
-                    return False
-        
-        return True
-
-    def is_tie(self):
-        #if each player makes 15 moves with a king without any skipped pieces the game is a tie
-        if self.board.king_moves == 30:
-            return True
-        return False
-
-
     def select(self, row, col):
         #if a piece has been skipped, mark it, else select a piece
         if self.board.skipped:
@@ -77,41 +48,43 @@ class Game:
     def _move(self, row, col):
         #get selected spot on the board
         piece = self.board.get_piece(row, col)
+        possible_moves = self.valid_moves.get(self.selected)
         #if selected is an empty space, and is a valid move, then make that move
-        if self.selected and piece == 0 and str([row, col]) in self.valid_moves[self.selected].keys():
-            self.board.move(self.selected, row, col)
+        if possible_moves:
+            if self.selected and piece == 0 and str([row, col]) in possible_moves.keys():
+                self.board.move(self.selected, row, col)
 
-            # if skipped, remove skipped piece
-            if self.valid_moves[self.selected][str([row, col])]:
-                skipped_piece = literal_eval(self.valid_moves[self.selected][str([row, col])])
-                remove_piece = self.board.get_piece(
-                    skipped_piece[0], skipped_piece[1])
-                self.board.remove_piece(remove_piece)
+                # if skipped, remove skipped piece
+                if possible_moves[str([row, col])]:
+                    skipped_piece = literal_eval(self.valid_moves[self.selected][str([row, col])])
+                    remove_piece = self.board.get_piece(
+                        skipped_piece[0], skipped_piece[1])
+                    self.board.remove_piece(remove_piece)
 
-                # if after skipping there is another skip available, keep current players turn and allow him to move only the selected piece.
-                piece = self.board.get_piece(row, col)
-                self.valid_moves, _ = self.board.get_valid_moves(self.turn)
-                if any(value != False for value in self.valid_moves[piece].values()):
-                    self.board.skipped = piece
-                    self.select(row, col)
+                    # if after skipping there is another skip available, keep current players turn and allow him to move only the selected piece.
+                    piece = self.board.get_piece(row, col)
+                    self.valid_moves, skipped = self.board.get_valid_moves(self.turn)
+                    if skipped and piece in self.valid_moves.keys():
+                        self.board.skipped = piece
+                        self.select(row, col)
+                    else:
+                        #if a piece gets to opposite end, make it a king and change turn
+                        if row == 0 or row == ROWS-1:
+                            self.board.make_king(self.selected, row)
+                            self.change_turn()
+                            return True
+
+                #if a piece gets to opposite end, make it a king and change turn
                 else:
-                    #if a piece gets to opposite end, make it a king and change turn
                     if row == 0 or row == ROWS-1:
                         self.board.make_king(self.selected, row)
                         self.change_turn()
                         return True
 
-            #if a piece gets to opposite end, make it a king and change turn
-            else:
-                if row == 0 or row == ROWS-1:
-                    self.board.make_king(self.selected, row)
+                if not self.board.skipped:
                     self.change_turn()
-                    return True
 
-            if not self.board.skipped:
-                self.change_turn()
-
-            self.board.skipped = None
+                self.board.skipped = None
         return True
 
     def draw_valid_moves(self, moves, current_piece):
@@ -125,7 +98,8 @@ class Game:
 
     def change_turn(self):
         #check if after last move, the game is won or a tie, else reset turn dependent variables
-        if self.is_won():
+        print(self.board.evaluate())
+        if self.board.is_won(self.turn):
             self.update()
             self.winner = self.turn
             print(f"AND THE WINNER IS {self.winner}")
@@ -135,7 +109,7 @@ class Game:
             elif input() == 'n':
                 pygame.quit() #doesn't work :P 
 
-        elif self.is_tie():
+        elif self.board.is_tie():
             self.update()
             self.winner = None
             print(f"GAME HAS ENDED IN A DRAW DUE TO TOO MANY NON SKIP TYPE MOVES")
