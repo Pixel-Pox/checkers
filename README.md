@@ -14,5 +14,29 @@ Start the game with
 python main.py
 ```
 
-You play by selecting a piece on each player's turn and then selecting a available legal move (marked with blue dot). 
+By default you play as White pieces against level 3 Black.
+You can ask for help with arguments by typing in: 
+```shell
+python main.py -h
+```
+
+Arguments for black/white level are -b, -w and take in integers from 1 to 7: 
+```shell
+python main.py -b 4
+python main.py -w 2
+```
+
+If you want to play as black
+```shell
+python main.py -p BLACK
+```
+
+Or if you want the AI to play against AI
+```shell
+python main.py -p None -b 5 -w 5
+```
+
+You play by selecting a piece on each player's turn and then selecting an available legal move (marked with blue dot). 
+
+Good luck and have fun :) 
 
