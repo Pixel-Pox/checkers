@@ -16,3 +16,15 @@ python main.py
 
 You play by selecting a piece on each player's turn and then selecting a available legal move (marked with blue dot). 
 
+
+## Contributing
+If you want to make changes to the code, feel free. 
+Install the development libraries with
+```shell
+pip install -r requirements-dev.txt
+```
+
+Run all tests with
+```shell
+python -m pytest
+```
