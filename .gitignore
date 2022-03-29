@@ -1,4 +1,21 @@
 checkers/__pycache__/*
 bla.ipynb
+<<<<<<< HEAD
 minimax/__pycache__/*
+=======
+checkers/__pycache__/board.cpython-310.pyc
+checkers/__pycache__/board.cpython-310.pyc
+checkers/__pycache__/constants.cpython-310.pyc
+checkers/__pycache__/game.cpython-310.pyc
+checkers/__pycache__/board.cpython-310.pyc
+checkers/__pycache__/constants.cpython-310.pyc
+checkers/__pycache__/game.cpython-310.pyc
+checkers/__pycache__/piece.cpython-310.pyc
+minimax/__pycache__/__init__.cpython-310.pyc
+minimax/__pycache__/algorithm.cpython-310.pyc
+checkers/__pycache__/board.cpython-310.pyc
+checkers/__pycache__/constants.cpython-310.pyc
+checkers/__pycache__/game.cpython-310.pyc
+checkers/__pycache__/piece.cpython-310.pyc
+>>>>>>> 479320171d4d6b26178fc4e0248c4ab8ddd3c0bd
 .idea/
