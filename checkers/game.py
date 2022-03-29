@@ -107,7 +107,7 @@ class Game:
             if input() == 'y':
                 self.reset()
             elif input() == 'n':
-                pygame.quit() #doesn't work :P 
+                exit()
 
         elif self.board.is_tie():
             self.update()
@@ -117,7 +117,7 @@ class Game:
             if input() == 'y':
                 self.reset()
             elif input() == 'n':
-                pygame.quit() #doesn't work :P 
+                exit()
         else:
             self.valid_moves = {}
             self.board.skipped = False
