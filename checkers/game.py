@@ -1,8 +1,10 @@
+from numpy import array
 import pygame
 from ast import literal_eval
 from checkers.board import Board
 from checkers.constants import WHITE, BLACK, BLUE, SQUARE_SIZE, ROWS
-
+from time import sleep
+from typing import Tuple
 
 class Game:
     def __init__(self, window) -> None:
@@ -10,11 +12,13 @@ class Game:
         self._init()
         self.window = window
 
-    def update(self):
+    # game update redraws the next frame of the game
+    def update(self) -> None:
         self.board.draw(self.window)
         self.draw_valid_moves(self.valid_moves, self.selected)
         pygame.display.update()
 
+    # additional init function for reseting the game
     def _init(self):
         self.selected = None
         self.board = Board()
@@ -22,22 +26,24 @@ class Game:
         self.valid_moves = {}
         self.winner = None
 
+    # reset function
     def reset(self):
         self._init()
 
-    def select(self, row, col):
+    # this function handles selection of a space on the board
+    def select(self, row: int, col: int) -> bool:
         #if a piece has been skipped, mark it, else select a piece
         if self.board.skipped:
             piece = self.board.skipped
         else:
             piece = self.board.get_piece(row, col)
-        #if piece selected, try to move it, else just select a new piece
+        #if piece selected, try to move it, else just reselect the current selection
         if self.selected:
             result = self._move(row, col)
             if not result:
                 self.selected = None
                 self.select(row, col)
-        #if selected is an instance of Piece and it's current player's piece, check all valid moves for that piece
+        #if selected is an instance of a Piece class and it's current player's piece, check all valid moves for that player
         if piece != 0 and piece.color == self.turn:
             self.selected = piece
             self.valid_moves, _ = self.board.get_valid_moves(self.turn)
@@ -45,9 +51,11 @@ class Game:
 
         return False
 
-    def _move(self, row, col):
+    # function that tries to move the piece on the board
+    def _move(self, row: int, col: int) -> bool:
         #get selected spot on the board
         piece = self.board.get_piece(row, col)
+        # retrieve the possible moves for current piece
         possible_moves = self.valid_moves.get(self.selected)
         #if selected is an empty space, and is a valid move, then make that move
         if possible_moves:
@@ -68,27 +76,28 @@ class Game:
                         self.board.skipped = piece
                         self.select(row, col)
                     else:
-                        #if a piece gets to opposite end, make it a king and change turn
+                        # if a piece gets to opposite end, make it a king and change turn
                         if row == 0 or row == ROWS-1:
                             self.board.make_king(self.selected, row)
                             self.change_turn()
                             return True
 
-                #if a piece gets to opposite end, make it a king and change turn
+                # if a piece gets to opposite end, make it a king and change turn
                 else:
                     if row == 0 or row == ROWS-1:
                         self.board.make_king(self.selected, row)
                         self.change_turn()
                         return True
 
+                # change turn if no skip avilable
                 if not self.board.skipped:
                     self.change_turn()
 
                 self.board.skipped = None
         return True
 
-    def draw_valid_moves(self, moves, current_piece):
-        #mark all possible moves with blue dot
+    # Draws valid moves as blue dots on the board
+    def draw_valid_moves(self, moves: dict, current_piece: object) -> None:
         if current_piece in moves:
             for key, value in moves[current_piece].items():
                 key_list = literal_eval(key)
@@ -96,9 +105,12 @@ class Game:
                 pygame.draw.circle(self.window, BLUE, (col * SQUARE_SIZE +
                                 SQUARE_SIZE//2, row * SQUARE_SIZE + SQUARE_SIZE//2), 15)
 
+    # switches players turns
     def change_turn(self):
-        #check if after last move, the game is won or a tie, else reset turn dependent variables
-        print(self.board.evaluate())
+        # print evaluation of the current board state
+        print(f'Current evaluation: {self.board.evaluate():.2f}')
+
+        #check if after last move, the game is won or a tie, else reset turn dependent variables   
         if self.board.is_won(self.turn):
             self.update()
             self.winner = self.turn
@@ -126,10 +138,14 @@ class Game:
                 self.turn = BLACK
             else:
                 self.turn = WHITE
-    
-    def get_board(self):
+        # if using caching it's good to have this sleep call, otherwise the game is unwatchable - too fast
+        #sleep(0.3)
+
+    # returns the current game's board object
+    def get_board(self) -> object:
         return self.board
 
+    # if ai is playing, then this switches the current board with the board where the AI made a move
     def ai_move(self, board):
         self.board = board
         self.change_turn()

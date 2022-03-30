@@ -1,6 +1,8 @@
 import pygame
 from .constants import WHITE, BLACK, SQUARE_SIZE, RED, GOLD, ROWS
 
+#Piece class taken from the Tech with Tim checkers video, modified for my needs
+
 class Piece:
     PADDING = 10
     BORDER = 2

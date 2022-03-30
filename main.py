@@ -14,7 +14,7 @@ def get_position_mouse(pos: tuple) -> tuple:
     col = x // SQUARE_SIZE
     return row, col
 
-def main():
+def main() -> None:
     run = True
     clock = pygame.time.Clock()
     game = Game(WINDOW)
@@ -23,7 +23,7 @@ def main():
         clock.tick(FPS)
         
 
-        if not game.board.is_won(game.turn) or not game.board.is_tie(game.turn):
+        if not game.board.is_won(game.turn) or not game.board.is_tie():
             if game.turn == BLACK and BLACK_LEVEL:
                 _, new_board = minimax(game.board, BLACK_LEVEL, False, float('-inf'), float('inf'))
                 game.ai_move(new_board)

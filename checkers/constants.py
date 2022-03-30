@@ -1,9 +1,9 @@
-import pygame
-
+# Game variables
 WIDTH, HEIGHT = 800, 800
 ROWS, COLS = 10, 10
 SQUARE_SIZE  = WIDTH//COLS
 
+# Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_BROWN = (246, 172, 152)
@@ -11,6 +11,8 @@ DARK_BROWN = (125, 80, 56)
 RED = (224,29,29)
 GOLD = (255,215,0)
 BLUE = (0, 0, 255)
+
+# Initial attributes
 PLAYER = WHITE
 WHITE_LEVEL = None
 BLACK_LEVEL = 3
