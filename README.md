@@ -40,3 +40,15 @@ You play by selecting a piece on each player's turn and then selecting an availa
 
 Good luck and have fun :) 
 
+
+## Contributing
+If you want to make changes to the code, feel free. 
+Install the development libraries with
+```shell
+pip install -r requirements-dev.txt
+```
+
+Run all tests with
+```shell
+python -m pytest
+```
